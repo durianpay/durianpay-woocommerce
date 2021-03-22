@@ -419,21 +419,14 @@ function woocommerce_durianpay_init()
             $amount = number_format(round($order->get_total()), 2);
 
             return array(
-                'access_key'          => 'dp_live_mzv8nuwrpsko7g8m',
+                'access_key'          => 'dp_live_l6k2jwi41pzc5bl8',
                 'environment'         => 'staging',
-                'customer_id'         => 'cus_NdYlDlnQDN2820',
                 'container_elem'      => "pay-btn-container",
-		        'order_id' => $this->createOrGetDurianpayOrderId($orderId),
                 'order_info'          => array(
 			        'id' => $this->createOrGetDurianpayOrderId($orderId),
                     'amount' => $amount,
                     'currency' => self::IDR,
-                    'items' => array(
-                        name => "LED Television",
-                        qty => 1,
-                        price => $amount,
-                        logo => "/static/tv_image.jpg"
-                    ),
+                    'items' => $this->getCartInfo,
                 ),
             );
         }
@@ -495,6 +488,23 @@ function woocommerce_durianpay_init()
             $order->add_order_note("Durianpay OrderId: $durianpayOrderId");
 
             return $durianpayOrderId;
+        }
+
+        public function getCartInfo() {
+            $cart_data = array();
+            foreach ( WC()->cart->get_cart() as $cart_item_key => $cart_item ) {
+               $product = $cart_item['data'];
+               $quantity = $cart_item['quantity'];
+               $price = $product->get_price();
+               $name = $product->get_name();
+
+               $cart_data[] = array(
+                       "name" => $name,
+                       "qty" => $quantity,
+                       "price" => number_format(round($price), 2),
+               );
+            }
+            return $cart_data;
         }
 
         public function getCustomerInfo($order)
