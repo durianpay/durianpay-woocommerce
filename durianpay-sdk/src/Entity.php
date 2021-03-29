@@ -12,7 +12,9 @@ class Entity extends Resource implements ArrayableInterface
     {
         $entityUrl = $this->getEntityUrl();
 
-        return $this->request('POST', $entityUrl, $attributes);
+        $response =  $this->request('POST', $entityUrl, $attributes);
+
+        return $response;
     }
 
     protected function fetch($id)

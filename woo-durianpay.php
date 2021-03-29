@@ -419,14 +419,14 @@ function woocommerce_durianpay_init()
             $amount = number_format(round($order->get_total()), 2);
 
             return array(
-                'access_key'          => 'dp_live_l6k2jwi41pzc5bl8',
+                'access_key'          => 'dp_live_9gf2gbgk1rdazqq4',
                 'environment'         => 'staging',
                 'container_elem'      => "pay-btn-container",
                 'order_info'          => array(
 			        'id' => $this->createOrGetDurianpayOrderId($orderId),
                     'amount' => $amount,
                     'currency' => self::IDR,
-                    'items' => $this->getCartInfo,
+                    'items' => $this->getCartInfo(),
                 ),
             );
         }
@@ -502,6 +502,7 @@ function woocommerce_durianpay_init()
                        "name" => $name,
                        "qty" => $quantity,
                        "price" => number_format(round($price), 2),
+                       "logo" => wp_get_attachment_url( $product->get_image_id() ),
                );
             }
             return $cart_data;
@@ -538,6 +539,7 @@ function woocommerce_durianpay_init()
                 'amount'          => number_format(round($order->get_total()), 2),
                 'currency'        => $this->getOrderCurrency($order),
                 'customer'        => $this->getCustomerInfo($order),
+                'items'           => $this->getCartInfo(),
             );
 
             return $data;

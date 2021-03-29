@@ -1,24 +1,5 @@
 <?php
 
-// Include Requests only if not already defined
-if (class_exists('Requests') === false)
-{
-    require __DIR__.'/libs/Requests-1.7.1/library/Requests.php';
-}
-
-try
-{
-    Requests::register_autoloader();  
-
-    if (version_compare(Requests::VERSION, '1.6.0') === -1)
-    {
-        throw new Exception('Requests class found but did not match');
-    }
-}
-catch (\Exception $e)
-{
-    throw new Exception('Requests class found but did not match');
-}
 
 spl_autoload_register(function ($class)
 {

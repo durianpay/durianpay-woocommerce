@@ -9,27 +9,12 @@
 
     data.onFailure = function(response) {
       console.log("payment failed: ", response)
-      document.durianpayform.submit();
     }
     
     var durianpayCheckout = Durianpay.init(data);
 
-    var setDisabled = function(id, state) {
-        if (typeof state === 'undefined') {
-          state = true;
-        }
-        var elem = document.getElementById(id);
-        if (state === false) {
-          elem.removeAttribute('disabled');
-        } else {
-          elem.setAttribute('disabled', state);
-        }
-      };
-
     // global method
     function openCheckout() {
-        // Disable the pay button
-        setDisabled('dpay-checkout-btn');
         durianpayCheckout.checkout();
     }
 

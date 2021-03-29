@@ -88,4 +88,12 @@ class Api
     {
         return self::getBaseUrl() . substr($relativeUrl, 0, -1);
     }
+
+    public static function getAuthHeader() {
+		return "Authorization: Basic " . base64_encode(self::getAuthString());
+	}
+
+    public function getAuthString() {
+		return self::$secret . ':';
+	}
 }

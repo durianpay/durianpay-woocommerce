@@ -28,24 +28,38 @@ class Request
      * @return array Response data in array format. Not meant
      * to be used directly
      */
-    public function request($method, $url, $data = array())
+    public function request($method, $url, $data = [])
     {
         $url = Api::getFullUrl($url);
 
-        $options = array(
-            'auth' => array(Api::getKey(), Api::getSecret()),
-            'timeout' => 60
-        );
-
         $headers = $this->getRequestHeaders();
 
-        $response = Requests::request($url, $headers, $data, $method, $options);
+        return $this->_request($method, $url, $data, $headers);
+    }
 
-        $this->checkErrors($response);
+    private function _request($method, $url, $payload = [], $headers = []) {
+        $ch = curl_init();
 
-        $final_data = json_decode($response->body, true);
+        curl_setopt($ch, CURLOPT_URL, $url);
 
-	    return $final_data;
+
+        if ($method == "POST") {
+            curl_setopt($ch, CURLOPT_POST, true);
+            curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($payload));
+        }
+
+        if (count($headers) > 0) {
+            curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
+        }
+
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
+	curl_setopt($ch, CURLOPT_VERBOSE, true);
+
+        $output = curl_exec($ch);
+
+        curl_close($ch);
+
+        return json_decode($output, true);
     }
 
     /**
@@ -138,11 +152,11 @@ class Request
 
     protected function getRequestHeaders()
     {
-        $uaHeader = array(
-            'User-Agent' => $this->constructUa()
-        );
+	$requestHeaders = [
+            sprintf("%s", Api::getAuthHeader()),
+        ];
 
-        $headers = array_merge(self::$headers, $uaHeader);
+        $headers = array_merge(self::$headers, $requestHeaders);
 
         return $headers;
     }
