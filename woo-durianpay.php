@@ -14,7 +14,6 @@ if ( ! defined( 'ABSPATH' ) )
     exit; // Exit if accessed directly
 }
 
-require_once __DIR__.'/includes/durianpay-webhook.php';
 require_once __DIR__.'/durianpay-sdk/Durianpay.php';
 require_once ABSPATH . 'wp-admin/includes/plugin.php';
 
@@ -22,7 +21,6 @@ use Durianpay\Api\Api;
 use Durianpay\Api\Errors;
 
 add_action('plugins_loaded', 'woocommerce_durianpay_init', 0);
-add_action('admin_post_nopriv_dp_wc_webhook', 'durianpay_webhook_init', 10);
 
 
 function woocommerce_durianpay_init()
@@ -35,15 +33,14 @@ function woocommerce_durianpay_init()
     class WC_Durianpay extends WC_Payment_Gateway
     {
          // This one stores the WooCommerce Order Id
-         const SESSION_KEY                    = 'durianpay_wc_order_id';
+         const SESSION_KEY                     = 'durianpay_wc_order_id';
          const DURIANPAY_PAYMENT_ID            = 'durianpay_payment_id';
+         const DURIANPAY_PAYMENT_SUCCESS       = 'durianpay_payment_success';
          const DURIANPAY_ORDER_ID              = 'durianpay_order_id';
          const DURIANPAY_SIGNATURE             = 'durianpay_signature';
          const DURIANPAY_WC_FORM_SUBMIT        = 'durianpay_wc_form_submit';
 
          const IDR                            = 'IDR';
-         const CAPTURE                        = 'capture';
-         const AUTHORIZE                      = 'authorize';
          const WC_ORDER_ID                    = 'woocommerce_order_id';
 
          const DEFAULT_LABEL                  = 'Credit Card/Debit Card/NetBanking';
@@ -54,12 +51,8 @@ function woocommerce_durianpay_init()
             'enabled',
             'title',
             'description',
-            'key_id',
             'key_secret',
-            'payment_action',
             'order_success_message',
-            'enable_webhook',
-            'webhook_secret',
         );
 
         public $form_fields = array();
@@ -173,8 +166,6 @@ function woocommerce_durianpay_init()
 
         public function init_form_fields()
         {
-            $webhookUrl = esc_url(admin_url('admin-post.php')) . '?action=dp_wc_webhook';
-
             $defaultFormFields = array(
                 'enabled' => array(
                     'title' => __('Enable/Disable', $this->id),
@@ -194,44 +185,16 @@ function woocommerce_durianpay_init()
                     'description' => __('This controls the description which the user sees during checkout.', $this->id),
                     'default' => __(static::DEFAULT_DESCRIPTION, $this->id)
                 ),
-                'key_id' => array(
-                    'title' => __('Key ID', $this->id),
-                    'type' => 'text',
-                    'description' => __('The key Id and key secret can be generated from "API Keys" section of Durianpay Dashboard. Use test or live for test or live mode.', $this->id)
-                ),
                 'key_secret' => array(
                     'title' => __('Key Secret', $this->id),
                     'type' => 'text',
-                    'description' => __('The key Id and key secret can be generated from "API Keys" section of Durianpay Dashboard. Use test or live for test or live mode.', $this->id)
-                ),
-                'payment_action' => array(
-                    'title' => __('Payment Action', $this->id),
-                    'type' => 'select',
-                    'description' =>  __('Payment action on order compelete', $this->id),
-                    'default' => self::CAPTURE,
-                    'options' => array(
-                        self::AUTHORIZE => 'Authorize',
-                        self::CAPTURE   => 'Authorize and Capture'
-                    )
+                    'description' => __('The key secret can be generated from "API Keys" section of Durianpay Dashboard "Settings" tab. Use test or live for test or live mode.', $this->id)
                 ),
                 'order_success_message' => array(
                     'title' => __('Order Completion Message', $this->id),
                     'type'  => 'textarea',
                     'description' =>  __('Message to be displayed after a successful order', $this->id),
                     'default' =>  __(STATIC::DEFAULT_SUCCESS_MESSAGE, $this->id),
-                ),
-                'enable_webhook' => array(
-                    'title' => __('Enable Webhook', $this->id),
-                    'type' => 'checkbox',
-                    'description' =>  "<span>$webhookUrl</span><br/><br/>Instructions and guide to <a href='https://github.com/durianpay/durianpay-woocommerce/wiki/Durianpay-Woocommerce-Webhooks'>Durianpay webhooks</a>",
-                    'label' => __('Enable Durianpay Webhook <a href="https://dashboard.durianpay.com/#/app/webhooks">here</a> with the URL listed below.', $this->id),
-                    'default' => 'no'
-                ),
-                'webhook_secret' => array(
-                    'title' => __('Webhook Secret', $this->id),
-                    'type' => 'text',
-                    'description' => __('Webhook secret is used for webhook signature verification. This has to match the one added <a href="https://dashboard.durianpay.com/#/app/webhooks">here</a>', $this->id),
-                    'default' => ''
                 ),
             );
 
@@ -408,18 +371,27 @@ function woocommerce_durianpay_init()
         private function getDefaultCheckoutArguments($order)
         {
             $callbackUrl = $this->getRedirectUrl();
-
             $orderId = $order->get_order_number();
-
             $productinfo = "Order $orderId";
             $mod_version = get_plugin_data(plugin_dir_path(__FILE__) . 'woo-durianpay.php')['Version'];
-
             $order = new WC_Order($orderId);
-
             $amount = number_format(round($order->get_total()), 2);
 
+            $api = $this->getDurianpayApiInstance();
+
+            try
+            {
+                $response = $api->auth->login()->toArray();
+            }
+            catch (Exception $e)
+            {
+                return $e->getMessage();
+            }
+
+            $accessKey = $response['data']['access_token'];
+
             return array(
-                'access_key'          => 'dp_live_9gf2gbgk1rdazqq4',
+                'access_key'          => $accessKey,
                 'environment'         => 'staging',
                 'container_elem'      => "pay-btn-container",
                 'order_info'          => array(
@@ -577,6 +549,7 @@ function woocommerce_durianpay_init()
             return <<<EOT
             <form name='durianpayform' action="$redirectUrl" method="POST">
                 <input type="hidden" name="durianpay_payment_id" id="durianpay_payment_id">
+                <input type="hidden" name="durianpay_payment_success" id="durianpay_payment_success">
                 <input type="hidden" name="durianpay_wc_form_submit" value="1">
             </form>
             <p id="msg-durianpay-success" class="woocommerce-info woocommerce-message" style="display:none">
@@ -684,21 +657,24 @@ EOT;
             }
             else
             {
-                if($_POST[self::DURIANPAY_WC_FORM_SUBMIT] ==1)
+                if($_POST[self::DURIANPAY_WC_FORM_SUBMIT] == 1 and $_POST[self::DURIANPAY_PAYMENT_SUCCESS] == "false")
+                {
+                    $success = false;
+                    $error = "Payment Failed";
+                }
+                else if ($_POST[self::DURIANPAY_WC_FORM_SUBMIT] == 1)
                 {
                     $success = false;
                     $error = 'Customer cancelled the payment';
-                }
-                else
-                {
+                } else {
                     $success = false;
-                    $error = "Payment Failed.";
+                    $error = 'There is an error processing the payment';
                 }
 
                 $this->handleErrorCase($order);
                 $this->updateOrder($order, $success, $error, $durianpayPaymentId, null);
-
                 wp_redirect(wc_get_checkout_url());
+
                 exit;
             }
 
@@ -842,12 +818,4 @@ EOT;
     }
 
     add_filter('woocommerce_payment_gateways', 'woocommerce_add_durianpay_gateway' );
-}
-
-// This is set to a priority of 10
-function durianpay_webhook_init()
-{
-    $dpWebhook = new DP_Webhook();
-
-    $dpWebhook->process();
 }

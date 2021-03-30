@@ -2,19 +2,49 @@
     var data = durianpay_wc_checkout_vars;
 
     data.onSuccess = function(response) {
-      console.log("payment success: ", response)
+      console.log("payment success: ", response);
       document.getElementById('durianpay_payment_id').value = response.payment_id;
+      document.getElementById('durianpay_payment_success').value = response.success;
       document.durianpayform.submit();
     }
 
     data.onFailure = function(response) {
-      console.log("payment failed: ", response)
+      console.log("payment failed: ", response);
+    }
+
+    data.onClose = function(response) {
+        console.log("payment modal closed: ", response);
+        setDisabled('dpay-checkout-btn', false);
+        
+        document.getElementById('durianpay_payment_success').value = response.success;
+        if(response.success && response.success === true) {
+            document.getElementById('durianpay_payment_id').value = response.payment_id;
+        }
+        
+        if(response.payment_id && response.payment_id != ""){
+            document.durianpayform.submit();
+        }
     }
     
     var durianpayCheckout = Durianpay.init(data);
 
+    var setDisabled = function(id, state) {
+        if (typeof state === 'undefined') {
+          state = true;
+        }
+
+        var elem = document.getElementById(id);
+        if (state === false) {
+          elem.removeAttribute('disabled');
+        } else {
+          elem.setAttribute('disabled', state);
+        }
+    };
+
+
     // global method
     function openCheckout() {
+        setDisabled('dpay-checkout-btn');
         durianpayCheckout.checkout();
     }
 

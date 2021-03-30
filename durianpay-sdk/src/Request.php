@@ -53,7 +53,7 @@ class Request
         }
 
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
-	curl_setopt($ch, CURLOPT_VERBOSE, true);
+	    curl_setopt($ch, CURLOPT_VERBOSE, true);
 
         $output = curl_exec($ch);
 
