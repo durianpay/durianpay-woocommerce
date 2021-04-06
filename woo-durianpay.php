@@ -474,7 +474,7 @@ function woocommerce_durianpay_init()
                        "name" => $name,
                        "qty" => $quantity,
                        "price" => number_format(round($price), 2),
-                       "logo" => wp_get_attachment_url( $product->get_image_id() ),
+                       //"logo" => wp_get_attachment_url( $product->get_image_id() ),
                );
             }
             return $cart_data;
