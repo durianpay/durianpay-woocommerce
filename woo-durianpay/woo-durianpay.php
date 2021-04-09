@@ -392,10 +392,10 @@ function woocommerce_durianpay_init()
 
             return array(
                 'access_key'          => $accessKey,
-                'environment'         => 'staging',
+                'environment'         => 'production',
                 'container_elem'      => "pay-btn-container",
                 'order_info'          => array(
-			        'id' => $this->createOrGetDurianpayOrderId($orderId),
+		    'id' => $this->createOrGetDurianpayOrderId($orderId),
                     'amount' => $amount,
                     'currency' => self::IDR,
                     'items' => $this->getCartInfo(),
