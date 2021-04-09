@@ -524,7 +524,7 @@ function woocommerce_durianpay_init()
             array('durianpay_checkout'));
 
             wp_register_script('durianpay_checkout',
-                'http://js-staging.durianpay.id/0.1.5/durianpay.js',
+                'https://js.durianpay.id/0.1.10/durianpay.min.js',
                 null, null);
 
             wp_localize_script('durianpay_wc_script',
