@@ -4,7 +4,7 @@ namespace Durianpay\Api;
 
 class Api
 {
-    protected static $baseUrl = 'http://api-staging.durianpay.id/';
+    protected static $baseUrl = 'https://api.durianpay.id/';
 
     protected static $key = null;
 
