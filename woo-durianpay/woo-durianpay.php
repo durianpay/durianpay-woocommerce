@@ -470,13 +470,20 @@ function woocommerce_durianpay_init()
                $price = $product->get_price();
                $name = $product->get_name();
 
+	       $image = wp_get_attachment_url( $product->get_image_id() );
+
+	       if ($image == false) {
+		       $image = "";
+	       }
+
                $cart_data[] = array(
                        "name" => $name,
                        "qty" => $quantity,
                        "price" => number_format(round($price), 2),
-                       //"logo" => wp_get_attachment_url( $product->get_image_id() ),
+                       "logo" => $image,
                );
             }
+
             return $cart_data;
         }
 
