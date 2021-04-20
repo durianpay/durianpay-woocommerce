@@ -396,9 +396,7 @@ function woocommerce_durianpay_init()
                 'container_elem'      => "pay-btn-container",
                 'order_info'          => array(
 		    'id' => $this->createOrGetDurianpayOrderId($orderId),
-                    'amount' => $amount,
-                    'currency' => self::IDR,
-                    'items' => $this->getCartInfo(),
+		    'customer_info' => $this->getCustomerInfo($order),
                 ),
             );
         }
@@ -495,6 +493,8 @@ function woocommerce_durianpay_init()
                     'given_name'    => $order->get_billing_first_name() . ' ' . $order->get_billing_last_name(),
                     'email'   => $order->get_billing_email(),
                     'mobile' => $order->get_billing_phone(),
+                    'phone' => $order->get_billing_phone(),
+		    'address' => $this->getAddressInfo($order),
                 );
             }
             else
@@ -503,11 +503,47 @@ function woocommerce_durianpay_init()
                     'given_name'    => $order->billing_first_name . ' ' . $order->billing_last_name,
                     'email'   => $order->billing_email,
                     'mobile' => $order->billing_phone,
+                    'phone' => $order->get_billing_phone(),
+		    'address' => $this->getAddressInfo($order),
                 );
             }
 
             return $args;
         }
+
+	public function getAddressInfo($order)
+	{
+            if (version_compare(WOOCOMMERCE_VERSION, '2.7.0', '>='))
+            {
+                $address = array(
+			'receiver_name' => $order->get_billing_first_name() . ' ' . $order->get_billing_last_name(),
+			'receiver_phone' => $order->get_billing_phone(),
+			'label' => $order->get_billing_first_name() . ' Home',
+			'address_line_1' => $order->get_billing_address_1(),
+			'address_line_2' => $order->get_billing_address_2(),
+			'city' => $order->get_billing_city(),
+			'region' => $order->get_billing_state(),
+			'postal_code' => $order->get_billing_postcode(),
+			'landmark' => '',
+                );
+            }
+            else
+            {
+                $address = array(
+			'receiver_name' => $order->billing_first_name . ' ' . $order->billing_last_name,
+			'receiver_phone' => $order->billing_phone,
+			'label' => $order->billing_first_name . ' Home',
+			'address_line_1' => $order->billing_address_1,
+			'address_line_2' => $order->billing_address_2,
+			'city' => $order->billing_city,
+			'region' => $order->billing_state,
+			'postal_code' => $order->billing_postcode,
+			'landmark' => '',
+                );
+            }
+
+	    return $address;
+	}
 
 
         private function getOrderCreationData($orderId)
