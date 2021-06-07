@@ -464,7 +464,7 @@ function woocommerce_durianpay_init()
             $cart_data = array();
             foreach ( WC()->cart->get_cart() as $cart_item_key => $cart_item ) {
                $product = $cart_item['data'];
-               $quantity = $cart_item['quantity'];
+               $quantity = intval($cart_item['quantity']);
                $price = $product->get_price();
                $name = $product->get_name();
 
