@@ -101,7 +101,7 @@ class DP_Webhook
         //
         // Order entity should be sent as part of the webhook payload
         //
-        $orderId = $data['data']['order_id'];
+        $orderId = intval($data['data']['order_ref_id']);
 
         $order = wc_get_order($orderId);
 

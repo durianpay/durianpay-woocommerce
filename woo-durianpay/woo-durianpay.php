@@ -206,7 +206,7 @@ function woocommerce_durianpay_init()
                 'enable_webhook' => array(
                     'title' => __('Enable Webhook', $this->id),
                     'type' => 'checkbox',
-                    'description' =>  "<span>$webhookUrl</span><br/><br/>Instructions and guide to <a href='https://github.com/razorpay/razorpay-woocommerce/wiki/Razorpay-Woocommerce-Webhooks'>Razorpay webhooks</a>",
+                    'description' =>  "<span>$webhookUrl</span>",
                     'label' => __('Enable Durianpay Webhook', $this->id),
                     'default' => 'no'
                 ),
@@ -694,6 +694,7 @@ function woocommerce_durianpay_init()
                 'amount'          => number_format(round($order->get_total()), 2),
                 'currency'        => $this->getOrderCurrency($order),
                 'customer'        => $this->getCustomerInfo($order),
+                'order_ref_id'    => strval($orderId),
                 'items'           => $this->getCartInfo(),
             );
 
