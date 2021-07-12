@@ -34,8 +34,32 @@ class Request
 
         $headers = $this->getRequestHeaders();
 
+        print "<h2>" . $data . "</h2>";
+
+        // print_r( "data", true )
+        // print_r( $data, true )
+
+        // print_r( "url", true )
+        print "urlss";
+        print "<h2>" . $url . "</h2>";
+
+        print "headers";
+        print "<h2>" . $headers . "</h2>";
+
+        // print_r( "headers", true )
+        // print_r( $headers, true )
+
         return $this->_request($method, $url, $data, $headers);
     }
+
+    /* Echo variable
+     * Description: Uses <pre> and print_r to display a variable in formated fashion
+     */
+    public function echo_log( $what )
+    {
+       echo '<pre>'.print_r( $what, true ).'</pre>';
+ 
+    }   
 
     private function _request($method, $url, $payload = [], $headers = []) {
         $ch = curl_init();
