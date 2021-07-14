@@ -14,6 +14,7 @@ if ( ! defined( 'ABSPATH' ) )
     exit; // Exit if accessed directly
 }
 
+require_once __DIR__.'/includes/durianpay-webhook.php';
 require_once __DIR__.'/durianpay-sdk/Durianpay.php';
 require_once ABSPATH . 'wp-admin/includes/plugin.php';
 
@@ -21,7 +22,7 @@ use Durianpay\Api\Api;
 use Durianpay\Api\Errors;
 
 add_action('plugins_loaded', 'woocommerce_durianpay_init', 0);
-
+add_action('admin_post_nopriv_dp_wc_webhook', 'durianpay_webhook_init', 10);
 
 function woocommerce_durianpay_init()
 {
@@ -53,6 +54,8 @@ function woocommerce_durianpay_init()
             'description',
             'key_secret',
             'order_success_message',
+            'enable_webhook',
+            'webhook_events',
         );
 
         public $form_fields = array();
@@ -157,15 +160,19 @@ function woocommerce_durianpay_init()
             if (version_compare(WOOCOMMERCE_VERSION, '2.0.0', '>='))
             {
                 add_action("woocommerce_update_options_payment_gateways_{$this->id}", $cb);
+                add_action( "woocommerce_update_options_payment_gateways_{$this->id}", array($this, 'autoEnableWebhook'));
             }
             else
             {
                 add_action('woocommerce_update_options_payment_gateways', $cb);
+                add_action( "woocommerce_update_options_payment_gateways", array($this, 'autoEnableWebhook'));
             }
         }
 
         public function init_form_fields()
         {
+            $webhookUrl = esc_url(admin_url('admin-post.php')) . '?action=dp_wc_webhook';
+
             $defaultFormFields = array(
                 'enabled' => array(
                     'title' => __('Enable/Disable', $this->id),
@@ -196,6 +203,27 @@ function woocommerce_durianpay_init()
                     'description' =>  __('Message to be displayed after a successful order', $this->id),
                     'default' =>  __(STATIC::DEFAULT_SUCCESS_MESSAGE, $this->id),
                 ),
+                'enable_webhook' => array(
+                    'title' => __('Enable Webhook', $this->id),
+                    'type' => 'checkbox',
+                    'description' =>  "<span>$webhookUrl</span>",
+                    'label' => __('Enable Durianpay Webhook', $this->id),
+                    'default' => 'no'
+                ),
+                'webhook_events' => array(
+                    'title'       => __('Webhook Events', $this->id),
+                    'type'        => 'multiselect',
+                    'description' =>  "",
+                    'class'       => 'wc-enhanced-select',
+                    'default'     => '',
+                    'options'     => array(
+                        DP_Webhook::PAYMENT_COMPLETED        => 'payment.completed',
+                        DP_Webhook::PAYMENT_FAILED            => 'payment.failed',
+                    ),
+                    'custom_attributes' => array(
+                        'data-placeholder' => __( 'Select Webhook Events', 'woocommerce' ),
+                    ),
+                ),
             );
 
             foreach ($defaultFormFields as $key => $value)
@@ -205,6 +233,118 @@ function woocommerce_durianpay_init()
                     $this->form_fields[$key] = $value;
                 }
             }
+        }
+
+        public function autoEnableWebhook()
+        {
+            $webhookExist = false;
+            $webhookUrl   = esc_url(admin_url('admin-post.php')) . '?action=dp_wc_webhook';
+
+            $key_secret  = $this->getSetting('key_secret');
+            $enabled     = $this->getSetting('enable_webhook');
+
+            //validating the key id and key secret set properly or not.
+            if($key_secret == null)
+            {
+                ?>
+                    <div class="notice error is-dismissible" >
+                     <p><b><?php _e( 'Key Id and Key Secret can`t be empty'); ?><b></p>
+                    </div>
+                <?php
+
+                error_log('Key Id and Key Secret are required to enable the webhook.');
+                return;
+            }
+
+            $eventsSubscribe = $this->getSetting('webhook_events');
+
+            $prepareEventsData = [];
+
+            if(empty($eventsSubscribe) == false)
+            {
+                foreach ($eventsSubscribe as $value) 
+                {
+                    $prepareEventsData[$value] = true;
+                }
+            }
+
+            if(in_array($_SERVER['SERVER_ADDR'], ["127.0.0.1","::1"]))
+            {
+                error_log('Could not enable webhook for localhost');
+                return;
+            }
+
+            if($enabled === 'no')
+            {
+                $data = [
+                    'url'    => $webhookUrl,
+                    'active' => false,
+                ];
+            }
+            else
+            {
+                //validating event is not empty
+                if(empty($eventsSubscribe) === true)
+                {
+                    ?>
+                        <div class="notice error is-dismissible" >
+                         <p><b><?php _e( 'At least one webhook event needs to be subscribed to enable webhook.'); ?><b></p>
+                        </div>
+                    <?php
+
+                    error_log('At least one webhook event needs to be subscribed to enable webhook.');
+                    return;
+                }
+
+                $data = [
+                    'url'    => $webhookUrl,
+                    'active' => $enabled == 'yes' ? true: false,
+                    'events' => $prepareEventsData,
+                ];
+
+            }
+
+            $webhook = $this->webhookAPI("GET", "webhooks");
+
+            foreach ($webhook['items'] as $key => $value) 
+            {
+                if($value['url'] === $webhookUrl)
+                {
+                    $webhookExist  = true;
+                    $webhookId     = $value['id'];
+                }
+            }
+
+            if($webhookExist)
+            {
+                $this->webhookAPI('PUT', "webhooks/".$webhookId, $data);
+            }
+            else
+            {
+                $this->webhookAPI('POST', "webhooks/", $data);
+            }
+            
+        }
+
+        protected function webhookAPI($method, $url, $data = array())
+        {
+            $webhook = [];
+            try
+            {
+                $api = $this->getDurianpayApiInstance();
+
+                $webhook = $api->request->request($method, $url, $data);
+            }
+            catch(Exception $e)
+            {
+                $log = array(
+                    'message' => $e->getMessage(),
+                );
+
+                error_log(json_encode($log));
+            }
+
+            return $webhook;
         }
 
         public function admin_options()
@@ -554,6 +694,7 @@ function woocommerce_durianpay_init()
                 'amount'          => number_format(round($order->get_total()), 2),
                 'currency'        => $this->getOrderCurrency($order),
                 'customer'        => $this->getCustomerInfo($order),
+                'order_ref_id'    => strval($orderId),
                 'items'           => $this->getCartInfo(),
             );
 
@@ -861,4 +1002,12 @@ EOT;
     }
 
     add_filter('woocommerce_payment_gateways', 'woocommerce_add_durianpay_gateway' );
+}
+
+// This is set to a priority of 10
+function durianpay_webhook_init()
+{
+    $dpWebhook = new DP_Webhook();
+
+    $dpWebhook->process();
 }
