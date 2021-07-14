@@ -1,6 +1,6 @@
 <?php
 
-namespace Razorpay\Api;
+namespace Durianpay\Api;
 use Requests;
 
 class Webhook extends Entity

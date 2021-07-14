@@ -2,7 +2,7 @@
 
 namespace Durianpay\Woocommerce\Errors;
 
-require_once __DIR__.'/../../razorpay-sdk/Durianpay.php';
+require_once __DIR__.'/../../durianpay-sdk/Durianpay.php';
 
 use Durianpay\Api\Errors as ApiErrors;
 
