@@ -166,7 +166,6 @@ function woocommerce_durianpay_init()
 
         public function init_form_fields()
         {
-            echo_log( "init_form_fields" );
             $defaultFormFields = array(
                 'enabled' => array(
                     'title' => __('Enable/Disable', $this->id),
@@ -258,17 +257,12 @@ function woocommerce_durianpay_init()
 
             $sessionKey = $this->getOrderSessionKey($orderId);
 
-            echo_log( "sessionKey 1" );
-            echo_log( $sessionKey );
-
             $create = false;
 
             try
             {
                 $durianpayOrderId = $woocommerce->session->get($sessionKey);
 
-                echo_log( "durianpayOrderId 1" );
-                echo_log( $durianpayOrderId );
                 // If we don't have an Order
                 // or the if the order is present in session but doesn't match what we have saved
                 if ($durianpayOrderId === null)
@@ -277,8 +271,6 @@ function woocommerce_durianpay_init()
                 }
                 else
                 {
-                    echo_log( "durianpayOrderId else 1" );
-                    echo_log( $durianpayOrderId );
                     return $durianpayOrderId;
                 }
             }
@@ -286,11 +278,9 @@ function woocommerce_durianpay_init()
             // So try creating one
             catch (Exception $e)
             {
-                echo_log( "Hereeee Payment failed" );
                 $create = true;
             }
 
-            echo_log( "Hereeee 1212" );
             if ($create)
             {
                 try
@@ -300,16 +290,12 @@ function woocommerce_durianpay_init()
                 // For the bad request errors, it's safe to show the message to the customer.
                 catch (Errors\BadRequestError $e)
                 {
-                    echo_log( "Hereeee3 Payment failed" );
-                    echo_log( $e );
                     return $e;
                 }
                 // For any other exceptions, we make sure that the error message
                 // does not propagate to the front-end.
                 catch (Exception $e)
                 {
-                    echo_log( "Hereeee2 Payment failed" );
-                    echo_log( $e );
                     return new Exception("Payment failed");
                 }
             }
@@ -333,8 +319,6 @@ function woocommerce_durianpay_init()
         protected function getDurianpayPaymentParams($orderId)
         {
             $durianpayOrderId = $this->createOrGetDurianpayOrderId($orderId);
-            echo_log( "Hereeee5 Payment failed" );
-            echo_log( $durianpayOrderId );
 
             if ($durianpayOrderId === null)
             {
@@ -438,18 +422,10 @@ function woocommerce_durianpay_init()
          */
         private function getShippingFee($order)
         {
-            echo_log( "getShippingFeees" );
-            
             if (version_compare(WOOCOMMERCE_VERSION, '3.0.0', '<'))
             {
-                echo_log( "inside" );
-                echo_log( $order->get_total_shipping() );
                 return number_format(round($order->get_total_shipping()), 2);
             }
-            echo_log( "inside22" );
-            echo_log( number_format(round($order->get_total_shipping()), 2) );
-            echo_log( "outside" );
-            echo_log( $order->get_shipping_total() );
 
             return $order->get_shipping_total();
         }
@@ -474,31 +450,19 @@ function woocommerce_durianpay_init()
             global $woocommerce;
 
             $api = $this->getDurianpayApiInstance();
-            echo_log( "Hereeee121334 api" );
-            echo_log( $api );
 
             $data = $this->getOrderCreationData($orderId);
-
-            echo_log( "Her433233 data" );
-            echo_log( $data );
 
             try
             {
                 $durianpayOrder = $api->order->create($data)->toArray();
-                echo_log( "Hereeee121334 durianpayOrder" );
-                echo_log( $durianpayOrder );
             }
             catch (Exception $e)
             {
-                echo_log( "Hereeee121334 Payment failed" );
-                echo_log( $e );
                 return $e;
             }
 
             $durianpayOrderId = $durianpayOrder['data']['id'];
-
-            echo_log( "Her433233 durianpayOrderId" );
-            echo_log( $durianpayOrderId );
 
             $woocommerce->session->set($sessionKey, $durianpayOrderId);
 
@@ -602,16 +566,7 @@ function woocommerce_durianpay_init()
 
             $shippingFee = $this->getShippingFee($order);
 
-            echo_log( "shippingFee4444" );
-            echo_log( $shippingFee );
-            echo_log( (float) $shippingFee );
-
             $orderAmount = $order->get_total() - (float) $shippingFee;
-
-            echo_log( "orderAmountorderAmount" );
-            echo_log( $orderAmount );
-
-
 
             $data = array(
                 'amount'          => number_format(round($orderAmount), 2),
@@ -621,9 +576,6 @@ function woocommerce_durianpay_init()
                 'shipping_fee'    => $this->getShippingFee($order),
                 'environment'     => 'pod1'
             );
-
-            echo_log( "final data" );
-            echo_log( $data );
 
             return $data;
         }
@@ -727,8 +679,6 @@ EOT;
 
         public function getDurianpayApiInstance()
         {
-            echo_log( "key_secretssneww" );
-            echo_log( $this->getSetting('key_secret') );
             return new Api($this->getSetting('key_id'), $this->getSetting('key_secret'));
         }
 
@@ -920,17 +870,6 @@ EOT;
             }
         }
     }
-
-    /* Echo variable
-     * Description: Uses <pre> and print_r to display a variable in formated fashion
-     */
-   function echo_log( $what )
-   {
-      echo '<pre>'.print_r( $what, true ).'</pre>';
-
-   }
-
-
 
      /**
      * Add the Gateway to WooCommerce
