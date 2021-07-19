@@ -556,6 +556,20 @@ function woocommerce_durianpay_init()
             return $order->get_order_currency();
         }
 
+        /**
+         * @param  WC_Order $order
+         * @return string shipping fees
+         */
+        private function getShippingFee($order)
+        {
+            if (version_compare(WOOCOMMERCE_VERSION, '3.0.0', '<'))
+            {
+                return number_format(round($order->get_total_shipping()), 2);
+            }
+
+            return $order->get_shipping_total();
+        }
+
          /**
          * Returns array of checkout params
          */
@@ -690,12 +704,17 @@ function woocommerce_durianpay_init()
         {
             $order = new WC_Order($orderId);
 
+            $shippingFee = $this->getShippingFee($order);
+
+            $orderAmount = $order->get_total() - (float) $shippingFee;
+
             $data = array(
-                'amount'          => number_format(round($order->get_total()), 2),
+                'amount'          => number_format(round($orderAmount), 2),
                 'currency'        => $this->getOrderCurrency($order),
                 'customer'        => $this->getCustomerInfo($order),
                 'order_ref_id'    => strval($orderId),
                 'items'           => $this->getCartInfo(),
+                'shipping_fee'    => $this->getShippingFee($order),
             );
 
             return $data;
@@ -708,7 +727,7 @@ function woocommerce_durianpay_init()
             array('durianpay_checkout'));
 
             wp_register_script('durianpay_checkout',
-                'https://js.durianpay.id/0.1.18/durianpay.min.js',
+                'https://js.durianpay.id/0.1.20/durianpay.min.js',
                 null, null);
 
             wp_localize_script('durianpay_wc_script',
