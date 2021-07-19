@@ -532,7 +532,7 @@ function woocommerce_durianpay_init()
 
             return array(
                 'access_key'          => $accessKey,
-                'environment'         => 'pod1',
+                'environment'         => 'production',
                 'container_elem'      => "pay-btn-container",
                 'order_info'          => array(
 		    'id' => $this->createOrGetDurianpayOrderId($orderId),
@@ -715,7 +715,7 @@ function woocommerce_durianpay_init()
                 'order_ref_id'    => strval($orderId),
                 'items'           => $this->getCartInfo(),
                 'shipping_fee'    => $this->getShippingFee($order),
-                'environment'     => 'pod1'
+                'environment'     => 'production'
             );
 
             return $data;
