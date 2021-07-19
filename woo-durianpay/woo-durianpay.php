@@ -715,7 +715,6 @@ function woocommerce_durianpay_init()
                 'order_ref_id'    => strval($orderId),
                 'items'           => $this->getCartInfo(),
                 'shipping_fee'    => $this->getShippingFee($order),
-                'environment'     => 'production'
             );
 
             return $data;
