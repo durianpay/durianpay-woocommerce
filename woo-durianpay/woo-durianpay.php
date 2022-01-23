@@ -510,12 +510,13 @@ function woocommerce_durianpay_init()
          */
         private function getDefaultCheckoutArguments($order)
         {
+            $total = parse_number($order->get_total());
             $callbackUrl = $this->getRedirectUrl();
             $orderId = $order->get_order_number();
             $productinfo = "Order $orderId";
             $mod_version = get_plugin_data(plugin_dir_path(__FILE__) . 'woo-durianpay.php')['Version'];
             $order = new WC_Order($orderId);
-            $amount = number_format(round($order->get_total()), 2);
+            $amount = number_format(round($total), 2);
 
             $api = $this->getDurianpayApiInstance();
 
@@ -1022,6 +1023,15 @@ EOT;
 
     add_filter('woocommerce_payment_gateways', 'woocommerce_add_durianpay_gateway' );
 }
+
+function parse_number($number, $dec_point=null) {
+    if (empty($dec_point)) {
+        $locale = localeconv();
+        $dec_point = $locale['decimal_point'];
+    }
+    return floatval(str_replace($dec_point, '.', preg_replace('/[^\d'.preg_quote($dec_point).']/', '', $number)));
+}
+
 
 // This is set to a priority of 10
 function durianpay_webhook_init()
