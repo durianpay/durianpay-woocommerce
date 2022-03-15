@@ -597,6 +597,9 @@ function woocommerce_durianpay_init()
             try
             {
                 $durianpayOrder = $api->order->create($data)->toArray();
+                if($durianpayOrder['errors'] != null) {
+                    throw new Exception(json_encode($durianpayOrder['errors']));
+                }
             }
             catch (Exception $e)
             {
@@ -642,13 +645,24 @@ function woocommerce_durianpay_init()
 
         public function getCustomerInfo($order)
         {
+            $phone = $order->get_billing_phone();
+            $mobile = $order->get_billing_phone();
+            
+            if ($phone != "") {
+                $phone = preg_replace('/[^0-9]/', '', $phone);
+            }
+
+            if ($mobile != "") {
+                $mobile = preg_replace('/[^0-9]/', '', $mobile);
+            }
+
             if (version_compare(WOOCOMMERCE_VERSION, '2.7.0', '>='))
             {
                 $args = array(
                     'given_name'    => $order->get_billing_first_name() . ' ' . $order->get_billing_last_name(),
                     'email'   => $order->get_billing_email(),
-                    'mobile' => $order->get_billing_phone(),
-                    'phone' => $order->get_billing_phone(),
+                    'mobile' => $mobile,
+                    'phone' => $phone,
 		    'address' => $this->getAddressInfo($order),
                 );
             }
@@ -657,8 +671,8 @@ function woocommerce_durianpay_init()
                 $args = array(
                     'given_name'    => $order->billing_first_name . ' ' . $order->billing_last_name,
                     'email'   => $order->billing_email,
-                    'mobile' => $order->billing_phone,
-                    'phone' => $order->get_billing_phone(),
+                    'mobile' => $mobile,
+                    'phone' => $phone,
 		    'address' => $this->getAddressInfo($order),
                 );
             }
@@ -728,7 +742,7 @@ function woocommerce_durianpay_init()
             array('durianpay_checkout'));
 
             wp_register_script('durianpay_checkout',
-                'https://js.durianpay.id/0.1.30/durianpay.min.js',
+                'https://js.durianpay.id/0.1.35/durianpay.min.js',
                 null, null);
 
             wp_localize_script('durianpay_wc_script',
