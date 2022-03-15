@@ -649,11 +649,11 @@ function woocommerce_durianpay_init()
             $mobile = $order->get_billing_phone();
             
             if ($phone != "") {
-                $phone = str_replace(' ', '', $phone);
+                $phone = preg_replace('/[^0-9]/', '', $phone);
             }
 
             if ($mobile != "") {
-                $mobile = str_replace(' ', '', $mobile);
+                $mobile = preg_replace('/[^0-9]/', '', $mobile);
             }
 
             if (version_compare(WOOCOMMERCE_VERSION, '2.7.0', '>='))
