@@ -729,6 +729,7 @@ function woocommerce_durianpay_init()
                 'customer'        => $this->getCustomerInfo($order),
                 'order_ref_id'    => strval($orderId),
                 'items'           => $this->getCartInfo(),
+                'expiry_date'     => $this->getSetting('expired_order'),
                 'shipping_fee'    => $this->getShippingFee($order),
             );
 
