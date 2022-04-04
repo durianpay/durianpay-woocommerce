@@ -3,8 +3,8 @@
  * Plugin Name: Durianpay for WooCommerce
  * Plugin URI: https://durianpay.id
  * Description: Durianpay Payment Gateway Integration for WooCommerce
- * Version: 1.1.0
- * Stable tag: 1.1.0
+ * Version: 1.2.0
+ * Stable tag: 1.2.0
  * Author: Team Durianpay
  * Author URI: https://durianpay.id
 */
@@ -56,6 +56,7 @@ function woocommerce_durianpay_init()
             'order_success_message',
             'enable_webhook',
             'webhook_events',
+            'enable_payment_notification',
         );
 
         public $form_fields = array();
@@ -202,6 +203,13 @@ function woocommerce_durianpay_init()
                     'type'  => 'textarea',
                     'description' =>  __('Message to be displayed after a successful order', $this->id),
                     'default' =>  __(STATIC::DEFAULT_SUCCESS_MESSAGE, $this->id),
+                ),
+                'enable_payment_notification' => array(
+                    'title' => __('Enable Payment Notification', $this->id),
+                    'type' => 'checkbox',
+                    'description' =>  "<span>Payment Notification</span>",
+                    'label' => __('Enable Payment Notification', $this->id),
+                    'default' => 'no'
                 ),
                 'enable_webhook' => array(
                     'title' => __('Enable Webhook', $this->id),
@@ -729,8 +737,8 @@ function woocommerce_durianpay_init()
                 'customer'        => $this->getCustomerInfo($order),
                 'order_ref_id'    => strval($orderId),
                 'items'           => $this->getCartInfo(),
-                'expiry_date'     => $this->getSetting('expired_order'),
                 'shipping_fee'    => $this->getShippingFee($order),
+                'is_payment_link' => $this->getPaymentNotification()
             );
 
             return $data;
@@ -743,7 +751,7 @@ function woocommerce_durianpay_init()
             array('durianpay_checkout'));
 
             wp_register_script('durianpay_checkout',
-                'https://js.durianpay.id/0.1.35/durianpay.min.js',
+                'https://js.durianpay.id/0.1.36/durianpay.min.js',
                 null, null);
 
             wp_localize_script('durianpay_wc_script',
@@ -907,6 +915,12 @@ EOT;
 
             wp_redirect($redirectUrl);
             exit;
+        }
+
+        protected function getPaymentNotification() {
+            $paymentNotification = $this->getSetting('enable_payment_notification');
+
+            return $paymentNotification == 'yes' ? true : false;
         }
 
         protected function getErrorMessage($orderId)
