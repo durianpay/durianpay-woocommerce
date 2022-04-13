@@ -56,6 +56,7 @@ function woocommerce_durianpay_init()
             'order_success_message',
             'enable_webhook',
             'webhook_events',
+            'expired_order',
             'enable_payment_notification',
         );
 
@@ -217,6 +218,12 @@ function woocommerce_durianpay_init()
                     'description' =>  "<span>$webhookUrl</span>",
                     'label' => __('Enable Durianpay Webhook', $this->id),
                     'default' => 'no'
+                ),
+                'expired_order' => array(
+                    'title' => __('Order Expiry Timelime', $this->id),
+                    'type'=> 'text',
+                    'description' => __('This determines when the order will expiry. Please put it in the format `hours:minutes:seconds`. Keep in mind that hours can have a value of more than 24, meaning you can add 1 or more days for an expiry date, minutes can have a value of more than 60, meaning you can add 1 or more hours for an expiry date, likewise for seconds, a value of more than 60 means we are adding 1 or more minutes for an expiry date, example => 100:100:100 100 hours, 100 minutes and 100 seconds meaning order will expire 4 days, 5 hours, 41 minutes and 40 seconds from now', $this->id),
+                    'default' => __(static::DEFAULT_LABEL, $this->id)
                 ),
                 'webhook_events' => array(
                     'title'       => __('Webhook Events', $this->id),
@@ -737,12 +744,29 @@ function woocommerce_durianpay_init()
                 'customer'        => $this->getCustomerInfo($order),
                 'order_ref_id'    => strval($orderId),
                 'items'           => $this->getCartInfo(),
-                'expiry_date'     => $this->getSetting('expired_order'),
+                'expiry_date'     => $this->getExpiryTimestamp($this->getSetting('expired_order')),
                 'shipping_fee'    => $this->getShippingFee($order),
                 'is_payment_link' => $this->getPaymentNotification()
             );
 
             return $data;
+        }
+
+        private function getExpiryTimestamp($expiryRequest) {
+            # expiry request is in the format hours:minutes:seconds
+            # hours can have a value of more than 24, meaning you can add 1 or more days for an expiry date
+            # minutes can have a value of more than 60, meaning you can add 1 or more hours for an expiry date
+            # likewise for seconds, a value of more than 60 means we are adding 1 or more minutes for an expiry date
+            # example => 100:100:100 100 hours, 100 minutes and 100 seconds meaning order will expire 4 days, 5 hours, 41 minutes and 40 seconds from now
+            $array = explode(":",$expiryRequest);
+
+            $hr = intval($array[0]); 
+            $min = intval($array[1]);
+            $sec = intval($array[2]);
+
+            $today = new DateTime();
+            $today->add(new DateInterval('PT'.$hr.'H'.$min.'M'.$sec.'S'));
+            return $today->format(DateTimeInterface::RFC3339);
         }
 
         private function enqueueCheckoutScripts($data)
