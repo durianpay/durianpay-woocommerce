@@ -16,6 +16,17 @@ jobs:
         path: 'woo-durianpay'
         filename: 'woo-durianpay.master.zip'
         exclusions: '*.git* /release/* .editorconfig'
+  - name: create release
+    uses: actions/create-release@v1
+    id: create_release
+    with:
+      draft: false
+      prerelease: true
+      release_name: ${{ github.ref }}
+      tag_name: ${{ github.ref }}
+      body_path: CHANGELOG.md
+    env:
+      GITHUB_TOKEN: ${{ github.token }}
     - name: Upload Release
       uses: ncipollo/release-action@v1
       with:
