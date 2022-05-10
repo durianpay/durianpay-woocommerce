@@ -1,0 +1,43 @@
+name: Create Release for Master Branch
+on:
+  push: 
+    branches:
+      - master
+
+jobs:
+   build:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@master
+    - name: Declare variables
+      id: vars
+      shell: bash
+      run: |
+        echo "##[set-output name=branch;]$(echo ${GITHUB_REF#refs/heads/})"
+        echo "::set-output name=sha_short::$(git rev-parse --short HEAD)"
+    - name: Archive Release
+      uses: thedoctor0/zip-release@master
+      with:
+        type: 'zip'
+        path: 'woo-durianpay'
+        filename: "woo-durianpay.master.${{ steps.vars.outputs.sha_short }}.zip"
+        exclusions: '*.git* /release/* .editorconfig'
+    - name: create release
+      uses: actions/create-release@v1
+      id: create_release
+      with:
+        draft: false
+        prerelease: true
+        release_name: "master-${{ steps.vars.outputs.sha_short }}"
+        tag_name: "master-${{ steps.vars.outputs.sha_short }}"
+      env:
+        GITHUB_TOKEN: ${{ github.token }}
+    - name: upload artifact
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ github.token }}
+      with:
+        upload_url: ${{ steps.create_release.outputs.upload_url }}
+        asset_path: "./woo-durianpay.master.${{ steps.vars.outputs.sha_short }}.zip"
+        asset_name: "woo-durianpay.master.${{ steps.vars.outputs.sha_short }}.zip"
+        asset_content_type: application/zip
