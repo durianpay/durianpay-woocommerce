@@ -24,12 +24,11 @@ jobs:
         prerelease: true
         release_name: ${{ github.ref }}
         tag_name: ${{ github.ref }}
-        body_path: CHANGELOG.md
       env:
         GITHUB_TOKEN: ${{ github.token }}
-      - name: Upload Release
-        uses: ncipollo/release-action@v1
-        with:
-          artifacts: "woo-durianpay.master.zip"
-          token: ${{ secrets.GITHUB_TOKEN }}
+    - name: Upload Release
+      uses: ncipollo/release-action@v1
+      with:
+        artifacts: "woo-durianpay.master.zip"
+        token: ${{ secrets.GITHUB_TOKEN }}
 
