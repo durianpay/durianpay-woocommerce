@@ -3,7 +3,7 @@ on:
   push: 
     branches:
       - master
-      - ci-test
+
 jobs:
    build:
     runs-on: ubuntu-latest
