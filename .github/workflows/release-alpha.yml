@@ -20,7 +20,7 @@ jobs:
       with:
         type: 'zip'
         path: 'woo-durianpay'
-        filename: "woo-durianpay.master.${{ vars.sha_short }}.zip"
+        filename: "woo-durianpay.master.${{ steps.vars.sha_short }}.zip"
         exclusions: '*.git* /release/* .editorconfig'
     - name: create release
       uses: actions/create-release@v1
@@ -28,8 +28,8 @@ jobs:
       with:
         draft: false
         prerelease: true
-        release_name: "master-${{ vars.sha_short }}"
-        tag_name: "master-${{ vars.sha_short }}"
+        release_name: "master-${{ steps.vars.sha_short }}"
+        tag_name: "master-${{ steps.vars.sha_short }}"
       env:
         GITHUB_TOKEN: ${{ github.token }}
     - name: upload artifact
@@ -38,6 +38,6 @@ jobs:
         GITHUB_TOKEN: ${{ github.token }}
       with:
         upload_url: ${{ steps.create_release.outputs.upload_url }}
-        asset_path: "./woo-durianpay.master.${{ vars.sha_short }}.zip"
-        asset_name: "woo-durianpay.master.${{ vars.sha_short }}.zip"
+        asset_path: "./woo-durianpay.master.${{ steps.vars.sha_short }}.zip"
+        asset_name: "woo-durianpay.master.${{ steps.vars.sha_short }}.zip"
         asset_content_type: application/zip
