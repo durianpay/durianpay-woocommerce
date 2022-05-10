@@ -1,0 +1,24 @@
+name: Create Release for Master Branch
+on:
+  push: 
+    branches:
+      - master
+      - ci-test
+jobs:
+   build:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@master
+    - name: Archive Release
+      uses: thedoctor0/zip-release@master
+      with:
+        type: 'zip'
+        path: 'woo-durianpay'
+        filename: 'woo-durianpay.master.zip'
+        exclusions: '*.git* /release/* .editorconfig'
+    - name: Upload Release
+      uses: ncipollo/release-action@v1
+      with:
+        artifacts: "woo-durianpay.master.zip"
+        token: ${{ secrets.GITHUB_TOKEN }}
+
