@@ -3,8 +3,8 @@
  * Plugin Name: Durianpay for WooCommerce
  * Plugin URI: https://durianpay.id
  * Description: Durianpay Payment Gateway Integration for WooCommerce
- * Version: 1.2.0
- * Stable tag: 1.2.0
+ * Version: 1.2.1
+ * Stable tag: 1.2.1
  * Author: Team Durianpay
  * Author URI: https://durianpay.id
 */
