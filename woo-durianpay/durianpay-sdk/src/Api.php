@@ -93,7 +93,7 @@ class Api
 		return "Authorization: Basic " . base64_encode(self::getAuthString());
 	}
 
-    public function getAuthString() {
+    public static function getAuthString() {
 		return self::$secret . ':';
 	}
 }
