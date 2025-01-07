@@ -1,47 +1,57 @@
 <?php
 
-namespace Durianpay\Api;
+namespace Razorpay\Api;
 
-use Durianpay\Api\Errors;
+use Razorpay\Api\Errors;
 
 class Entity extends Resource implements ArrayableInterface
 {
     protected $attributes = array();
-
-    protected function create($attributes = null)
+ /**
+     * Create method 
+     *
+     * @param array $attributes 
+     * 
+     */
+    protected function create($attributes = null) 
     {
         $entityUrl = $this->getEntityUrl();
-
-        $response =  $this->request('POST', $entityUrl, $attributes);
-
-        return $response;
+        
+        return $this->request('POST', $entityUrl, $attributes);
     }
 
     protected function fetch($id)
     {
         $entityUrl = $this->getEntityUrl();
 
-        if ($id === null)
-        {
-            $path = explode('\\', get_class($this));
-            $class = strtolower(array_pop($path));
-
-            $message = 'The ' . $class . ' id provided is null';
-
-            $code = Errors\ErrorCode::BAD_REQUEST_ERROR;
-
-            throw new Errors\BadRequestError($message, $code, 500);
-        }
+        $this->validateIdPresence($id);
 
         $relativeUrl = $entityUrl . $id;
-
+       
         return $this->request('GET', $relativeUrl);
+    }
+
+    protected function validateIdPresence($id)
+    {
+        if ($id !== null)
+        {
+            return;
+        }
+
+        $path = explode('\\', get_class($this));
+        $class = strtolower(array_pop($path));
+
+        $message = 'The ' . $class . ' id provided is null';
+
+        $code = Errors\ErrorCode::BAD_REQUEST_ERROR;
+
+        throw new Errors\BadRequestError($message, $code, 500);
     }
 
     protected function all($options = array())
     {
         $entityUrl = $this->getEntityUrl();
-
+        
         return $this->request('GET', $entityUrl, $options);
     }
 
@@ -71,17 +81,18 @@ class Entity extends Resource implements ArrayableInterface
      * @param string $method
      * @param string $relativeUrl
      * @param array  $data
+     * @param array  $additionHeader
+     * @param string $apiVersion
      *
      * @return Entity
      */
-    protected function request($method, $relativeUrl, $data = null)
+    protected function request($method, $relativeUrl, $data = null, $apiVersion = "v1")
     {
         $request = new Request();
 
-        $response = $request->request($method, $relativeUrl, $data);
+        $response = $request->request($method, $relativeUrl, $data, $apiVersion);
 
-        if ((isset($response['entity'])) and
-            ($response['entity'] == $this->getEntity()))
+        if ((isset($response['entity'])) and ($response['entity'] == $this->getEntity()))
         {
             $this->fill($response);
 
@@ -92,7 +103,7 @@ class Entity extends Resource implements ArrayableInterface
             return static::buildEntity($response);
         }
     }
-
+    
     /**
      * Given the JSON response of an API call, wraps it to corresponding entity
      * class or a collection and returns the same.
@@ -135,7 +146,8 @@ class Entity extends Resource implements ArrayableInterface
             'refund',
             'order',
             'customer',
-            'token');
+            'token',
+            'settlement');
     }
 
     protected static function getEntityClass($name)
@@ -155,7 +167,9 @@ class Entity extends Resource implements ArrayableInterface
     public function fill($data)
     {
         $attributes = array();
-
+        
+     if(is_array($data))
+     {   
         foreach ($data as $key => $value)
         {
             if (is_array($value))
@@ -163,7 +177,6 @@ class Entity extends Resource implements ArrayableInterface
                 if  (static::isAssocArray($value) === false)
                 {
                     $collection = array();
-
                     foreach ($value as $v)
                     {
                         if (is_array($v))
@@ -176,7 +189,6 @@ class Entity extends Resource implements ArrayableInterface
                             array_push($collection, $v);
                         }
                     }
-
                     $value = $collection;
                 }
                 else
@@ -187,7 +199,7 @@ class Entity extends Resource implements ArrayableInterface
 
             $attributes[$key] = $value;
         }
-
+      }
         $this->attributes = $attributes;
     }
 

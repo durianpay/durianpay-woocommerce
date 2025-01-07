@@ -1,11 +1,20 @@
 <?php
 
-namespace Durianpay\Api;
+namespace Razorpay\Api;
 
 use Requests;
 use Exception;
-use Durianpay\Api\Errors;
-use Durianpay\Api\Errors\ErrorCode;
+use Requests_Hooks;
+use Razorpay\Api\Errors;
+use Razorpay\Api\Errors\ErrorCode;
+
+
+// Available since PHP 5.5.19 and 5.6.3
+// https://git.io/fAMVS | https://secure.php.net/manual/en/curl.constants.php
+if (defined('CURL_SSLVERSION_TLSv1_1') === false)
+{
+    define('CURL_SSLVERSION_TLSv1_1', 5);
+}
 
 /**
  * Request class to communicate to the request libarary
@@ -17,7 +26,7 @@ class Request
      * @var array
      */
     protected static $headers = array(
-        'Durianpay-API'  =>  1
+        'Razorpay-API'  =>  1    
     );
 
     /**
@@ -25,41 +34,36 @@ class Request
      * @param  string   $method HTTP Verb
      * @param  string   $url    Relative URL for the request
      * @param  array $data Data to be passed along the request
+     * @param  array $additionHeader headers to be passed along the request
+     * @param  string $apiVersion version to be passed along the request
      * @return array Response data in array format. Not meant
      * to be used directly
      */
-    public function request($method, $url, $data = [])
-    {
-        $url = Api::getFullUrl($url);
+    public function request($method, $url, $data = array(), $apiVersion = "v1")
+    { 
+        $url = Api::getFullUrl($url, $apiVersion);
 
+        $hooks = new Requests_Hooks();
+
+        $hooks->register('curl.before_send', array($this, 'setCurlSslOpts'));
+
+        $options = array(
+            'auth' => array(Api::getKey(), Api::getSecret()),
+            'hook' => $hooks,
+            'timeout' => 60
+        );
+        
         $headers = $this->getRequestHeaders();
 
-        return $this->_request($method, $url, $data, $headers);
+        $response = Requests::request($url, $headers, $data, $method, $options);  
+        $this->checkErrors($response);
+
+        return json_decode($response->body, true);
     }
 
-    private function _request($method, $url, $payload = [], $headers = []) {
-        $ch = curl_init();
-
-        curl_setopt($ch, CURLOPT_URL, $url);
-
-
-        if ($method == "POST") {
-            curl_setopt($ch, CURLOPT_POST, true);
-            curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($payload));
-        }
-
-        if (count($headers) > 0) {
-            curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
-        }
-
-        curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
-	    curl_setopt($ch, CURLOPT_VERBOSE, true);
-
-        $output = curl_exec($ch);
-
-        curl_close($ch);
-
-        return json_decode($output, true);
+    public function setCurlSslOpts($curl)
+    {
+        curl_setopt($curl, CURLOPT_SSLVERSION, CURL_SSLVERSION_TLSv1_1);
     }
 
     /**
@@ -152,18 +156,19 @@ class Request
 
     protected function getRequestHeaders()
     {
-	$requestHeaders = [
-            sprintf("%s", Api::getAuthHeader()),
-        ];
-
-        $headers = array_merge(self::$headers, $requestHeaders);
+        $uaHeader = array(
+            'User-Agent' => $this->constructUa()
+            
+        );
+        
+        $headers = array_merge(self::$headers, $uaHeader);
 
         return $headers;
     }
 
     protected function constructUa()
     {
-        $ua = 'Durianpay/v1 PHPSDK/' . Api::VERSION . ' PHP/' . phpversion();
+        $ua = 'Razorpay/v1 PHPSDK/' . Api::VERSION . ' PHP/' . phpversion();
 
         $ua .= ' ' . $this->getAppDetailsUa();
 

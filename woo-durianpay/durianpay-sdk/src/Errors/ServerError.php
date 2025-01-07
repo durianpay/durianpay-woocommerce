@@ -1,6 +1,6 @@
 <?php
 
-namespace Durianpay\Api\Errors;
+namespace Razorpay\Api\Errors;
 
 class ServerError extends Error
 {

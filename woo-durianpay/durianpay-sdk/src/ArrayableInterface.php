@@ -1,6 +1,6 @@
 <?php
 
-namespace Durianpay\Api;
+namespace Razorpay\Api;
 
 interface ArrayableInterface
 {
