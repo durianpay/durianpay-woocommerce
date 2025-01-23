@@ -1,6 +1,6 @@
 <?php
 
-namespace Razorpay\Api\Errors;
+namespace Durianpay\Api\Errors;
 
 use Exception;
 

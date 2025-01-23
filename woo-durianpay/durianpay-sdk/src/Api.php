@@ -1,10 +1,10 @@
 <?php
 
-namespace Razorpay\Api;
+namespace Durianpay\Api;
 
 class Api
 {
-    protected static $baseUrl = 'https://api.razorpay.com';
+    protected static $baseUrl = 'https://api.durianpay.id/';
 
     protected static $key = null;
 
@@ -16,7 +16,7 @@ class Api
      */
     public static $appsDetails = array();
 
-    const VERSION = '2.8.7';
+    const VERSION = '2.2.0';
 
     /**
      * @param string $key
@@ -84,8 +84,16 @@ class Api
         return self::$secret;
     }
 
-    public static function getFullUrl($relativeUrl, $apiVersion = "v1")
+    public static function getFullUrl($relativeUrl)
     {
-        return self::getBaseUrl() . "/". $apiVersion . "/". $relativeUrl;
+        return self::getBaseUrl() . substr($relativeUrl, 0, -1);
     }
+
+    public static function getAuthHeader() {
+		return "Authorization: Basic " . base64_encode(self::getAuthString());
+	}
+
+    public static function getAuthString() {
+		return self::$secret . ':';
+	}
 }
