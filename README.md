@@ -30,8 +30,6 @@ Durianpay WooCommerce Plugin enables seamless integration of Durianpay as a paym
 2. Locate the "Durianpay" payment method and click **Set up**.
 3. Enter the following details:
    - **API Key**: Obtain this from your Durianpay dashboard.
-   - **Secret Key**: Obtain this from your Durianpay dashboard.
-   - **Enable Payment Method**: Check the box to enable Durianpay.
 4. Save the changes.
 
 ---
