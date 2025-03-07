@@ -588,10 +588,17 @@ function woocommerce_durianpay_init()
             }
 
             $accessKey = $response['data']['access_token'];
+            
+            // Determine environment based on secret key
+            $environment = 'production';
+            $secret = $this->getSetting('key_secret');
+            if (strpos($secret, 'dp_test') === 0) {
+                $environment = 'sandbox';
+            }
 
             return array(
                 'access_key'          => $accessKey,
-                'environment'         => 'production',
+                'environment'         => $environment,
                 'container_elem'      => "pay-btn-container",
                 'order_info'          => array(
 		    'id' => $this->createOrGetDurianpayOrderId($orderId),
