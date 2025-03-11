@@ -818,13 +818,16 @@ function woocommerce_durianpay_init()
 
         private function enqueueCheckoutScripts($data)
         {
-
+            $secret = $this->getSetting('key_secret');
+            $jsUrl = "https://js.durianpay.id/0.1.52/durianpay.min.js";
+            if (strpos($secret, 'dp_test') === 0) {
+                $jsUrl = "https://js.durianpay.id/sandbox/0.1.55/durianpay.min.js";
+            }
+                        
             wp_register_script('durianpay_wc_script', plugin_dir_url(__FILE__)  . 'script.js',
             array('durianpay_checkout'));
 
-            wp_register_script('durianpay_checkout',
-                'https://js.durianpay.id/0.1.52/durianpay.min.js',
-                null, null);
+            wp_register_script('durianpay_checkout', $jsUrl, null, null);
 
             wp_localize_script('durianpay_wc_script',
                 'durianpay_wc_checkout_vars',
