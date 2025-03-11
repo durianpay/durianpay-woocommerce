@@ -6,6 +6,8 @@ class Api
 {
     protected static $baseUrl = 'https://api.durianpay.id/';
 
+    protected static $sandboxBaseUrl = 'https://api-sandbox.durianpay.id/';
+
     protected static $key = null;
 
     protected static $secret = null;
@@ -26,6 +28,11 @@ class Api
     {
         self::$key = $key;
         self::$secret = $secret;
+        
+        // Check if the secret key has a dp_test prefix and use sandbox URL if it does
+        if (strpos($secret, 'dp_test') === 0) {
+            self::$baseUrl = self::$sandboxBaseUrl;
+        }
     }
 
     /*
