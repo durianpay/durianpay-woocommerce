@@ -5,52 +5,56 @@ namespace Durianpay\Api;
 use ArrayAccess;
 use ArrayIterator;
 use IteratorAggregate;
+use Traversable;
 
 class Resource implements ArrayAccess, IteratorAggregate
 {
-    protected $attributes = array();
+    protected array $attributes = [];
 
-    public function getIterator()
+    // Implementing IteratorAggregate correctly
+    public function getIterator(): Traversable
     {
         return new ArrayIterator($this->attributes);
     }
 
-    public function offsetExists($offset)
+    // Fixing ArrayAccess method signatures
+    public function offsetExists(mixed $offset): bool
     {
-        return (isset($this->attributes[$offset]));
+        return isset($this->attributes[$offset]);
     }
 
-    public function offsetSet($offset, $value)
+    public function offsetSet(mixed $offset, mixed $value): void
     {
         $this->attributes[$offset] = $value;
     }
 
-    public function offsetGet($offset)
+    public function offsetGet(mixed $offset): mixed
     {
-        return $this->attributes[$offset];
+        return $this->attributes[$offset] ?? null;
     }
 
-    public function offsetUnset($offset)
+    public function offsetUnset(mixed $offset): void
     {
         unset($this->attributes[$offset]);
     }
 
-    public function __get($key)
+    // Keeping existing magic methods for flexibility
+    public function __get(string $key): mixed
     {
-        return $this->attributes[$key];
+        return $this->attributes[$key] ?? null;
     }
 
-    public function __set($key, $value)
+    public function __set(string $key, mixed $value): void
     {
-        return $this->attributes[$key] = $value;
+        $this->attributes[$key] = $value;
     }
 
-    public function __isset($key)
+    public function __isset(string $key): bool
     {
-        return (isset($this->attributes[$key]));
+        return isset($this->attributes[$key]);
     }
 
-    public function __unset($key)
+    public function __unset(string $key): void
     {
         unset($this->attributes[$key]);
     }

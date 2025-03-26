@@ -6,7 +6,7 @@ use Durianpay\Api\Errors;
 
 class Entity extends Resource implements ArrayableInterface
 {
-    protected $attributes = array();
+    protected array $attributes = [];
 
     protected function create($attributes = null)
     {
