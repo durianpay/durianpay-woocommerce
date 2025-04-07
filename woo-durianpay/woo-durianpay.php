@@ -160,12 +160,12 @@ function woocommerce_durianpay_init()
             return $this->get_option($key);
         }
 
-        protected function getCustomOrdercreationMessage()
+        public function getCustomOrdercreationMessage($thank_you_title, $order)
         {
             $message =  $this->getSetting('order_success_message');
             if (isset($message) === false)
             {
-                $message = STATIC::DEFAULT_SUCCESS_MESSAGE;
+                $message = static::DEFAULT_SUCCESS_MESSAGE;
             }
             return $message;
         }
@@ -192,10 +192,39 @@ function woocommerce_durianpay_init()
             $this->title = $this->getSetting('title');
         }
 
+        public function enqueue_checkout_js_script_on_checkout()
+        {
+            $secret = $this->getSetting('key_secret');
+            $jsUrl = "https://js.durianpay.id/0.1.52/durianpay.min.js";
+            if (strpos($secret, 'dp_test') === 0) {
+                $jsUrl = "https://js.durianpay.id/sandbox/0.1.55/durianpay.min.js";
+            }
+
+            if (is_checkout()) 
+            {
+                wp_enqueue_script(
+                    'durianpay-checkout-js',
+                    $jsUrl,
+                    [],
+                    null,
+                    false // Load script in footer
+                );
+            }
+        }
+
+        public function add_defer_to_checkout_js($tag, $handle, $src)
+        {
+            if ('durianpay-checkout-js' === $handle)
+            {
+                return '<script src="' . esc_url($src) . '" defer="defer"></script>' . "\n";
+            }
+
+            return $tag;
+        }
+        
+
         protected function initHooks()
         {
-            add_action('init', array(&$this, 'check_durianpay_response'));
-
             add_action('woocommerce_receipt_' . $this->id, array($this, 'receipt_page'));
 
             add_action('woocommerce_api_' . $this->id, array($this, 'check_durianpay_response'));
@@ -205,13 +234,19 @@ function woocommerce_durianpay_init()
             if (version_compare(WOOCOMMERCE_VERSION, '2.0.0', '>='))
             {
                 add_action("woocommerce_update_options_payment_gateways_{$this->id}", $cb);
-                add_action( "woocommerce_update_options_payment_gateways_{$this->id}", array($this, 'autoEnableWebhook'));
+                add_action( "woocommerce_update_options_payment_gateways_{$this->id}", array($this, 'autoEnableWebhook'));            
             }
             else
             {
                 add_action('woocommerce_update_options_payment_gateways', $cb);
                 add_action( "woocommerce_update_options_payment_gateways", array($this, 'autoEnableWebhook'));
             }
+
+            add_action('wp_enqueue_scripts', array($this, 'enqueue_checkout_js_script_on_checkout'));
+
+            add_filter('script_loader_tag', array($this, 'add_defer_to_checkout_js'), 10, 3);
+
+            add_filter( 'woocommerce_thankyou_order_received_text', array($this, 'getCustomOrdercreationMessage'), 20, 2 );
         }
 
         public function init_form_fields()
@@ -926,9 +961,10 @@ EOT;
          **/
         function check_durianpay_response()
         {
-            global $woocommerce;
-
-            $orderId = $woocommerce->session->get(self::SESSION_KEY);
+            if (!WC()->session) {
+                WC()->initialize_session();
+            }
+            $orderId = WC()->session->get(self::SESSION_KEY);
             $order = new WC_Order($orderId);
 
             //
@@ -959,18 +995,18 @@ EOT;
             }
             else
             {
-                if($_POST[self::DURIANPAY_WC_FORM_SUBMIT] == 1 and $_POST[self::DURIANPAY_PAYMENT_SUCCESS] == "false")
-                {
+                $durianpayFormSubmit = $_POST[self::DURIANPAY_WC_FORM_SUBMIT] ?? null;
+                $durianpayPaymentSuccess = $_POST[self::DURIANPAY_PAYMENT_SUCCESS] ?? null;
+                
+                if ($durianpayFormSubmit == 1 && $durianpayPaymentSuccess === "false") {
                     $success = false;
                     $error = "Payment Failed";
-                }
-                else if ($_POST[self::DURIANPAY_WC_FORM_SUBMIT] == 1)
-                {
+                } elseif ($durianpayFormSubmit == 1) {
                     $success = false;
-                    $error = 'Customer cancelled the payment';
+                    $error = "Customer cancelled the payment";
                 } else {
                     $success = false;
-                    $error = 'There is an error processing the payment';
+                    $error = "There is an error processing the payment";
                 }
 
                 $this->handleErrorCase($order);
@@ -1041,7 +1077,6 @@ EOT;
 
             if (($success === true) and ($order->needs_payment() === true))
             {
-                $this->msg['message'] = $this->getCustomOrdercreationMessage() . "&nbsp; Order Id: $orderId";
                 $this->msg['class'] = 'success';
 
                 $order->payment_complete($durianpayPaymentId);
@@ -1093,26 +1128,12 @@ EOT;
          */
         protected function add_notice($message, $type = 'notice')
         {
-            global $woocommerce;
-            $type = in_array($type, array('notice','error','success'), true) ? $type : 'notice';
-            // Check for existence of new notification api. Else use previous add_error
-            if (function_exists('wc_add_notice'))
-            {
-                wc_add_notice($message, $type);
+            if (!function_exists('wc_add_notice')) {
+                return; // Prevents fatal error if WooCommerce is not loaded
             }
-            else
-            {
-                // Retrocompatibility WooCommerce < 2.1
-                switch ($type)
-                {
-                    case "error" :
-                        $woocommerce->add_error($message);
-                        break;
-                    default :
-                        $woocommerce->add_message($message);
-                        break;
-                }
-            }
+
+            $type = in_array($type, array('notice', 'error', 'success'), true) ? $type : 'notice';
+            wc_add_notice($message, $type);
         }
     }
 
