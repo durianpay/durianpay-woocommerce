@@ -1091,20 +1091,7 @@ EOT;
                 {
                     $woocommerce->cart->empty_cart();
                 }
-            }
-            else
-            {
-                $this->msg['class'] = 'error';
-                $this->msg['message'] = $errorMessage;
-
-                if ($durianpayPaymentId)
-                {
-                    $order->add_order_note("Payment Failed. Please check Durianpay Dashboard. <br/> Durianpay Id: $durianpayPaymentId");
-                }
-
-                $order->add_order_note("Transaction Failed: $errorMessage<br/>");
-                $order->update_status('failed');
-            }
+            }          
 
             if ($webhook === false)
             {
