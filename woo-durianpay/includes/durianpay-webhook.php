@@ -106,7 +106,7 @@ class DP_Webhook
         $order = wc_get_order($orderId);
 
         // If it is already marked as completed, ignore the event
-        if ($order->get_status() === "completed")
+        if ($order->get_status() === "processing")
         {
             return;
         }
@@ -114,8 +114,7 @@ class DP_Webhook
         $durianpayPaymentId = $data['data']['id'];
 
         $this->durianpay->updateOrder($order, true, "", $durianpayPaymentId, null, true);
-        $order->update_status('completed');
-        // Graceful exit since payment is now processed.
+        $order->update_status('processing');
         exit;
     }
 }
