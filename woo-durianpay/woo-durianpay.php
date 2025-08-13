@@ -721,7 +721,7 @@ function woocommerce_durianpay_init()
                $product = $cart_item['data'];
                $quantity = intval($cart_item['quantity']);
                $price = $product->get_price();
-               $name = $product->get_name();
+               $name = html_entity_decode($product->get_name());
 
 	       $image = wp_get_attachment_url( $product->get_image_id() );
 
@@ -730,7 +730,7 @@ function woocommerce_durianpay_init()
 	       }
 
                $cart_data[] = array(
-                       "name" => $name,
+                       "name" => html_entity_decode($name),
                        "qty" => $quantity,
                        "price" => number_format(round($price), 2),
                        "logo" => $image,
