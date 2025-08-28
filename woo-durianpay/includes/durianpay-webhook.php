@@ -106,7 +106,7 @@ class DP_Webhook
         $order = wc_get_order($orderId);
 
         // If it is already marked as completed, ignore the event
-        if ($order->get_status() === "processing")
+        if ($order->get_status() !== "pending")
         {
             return;
         }
