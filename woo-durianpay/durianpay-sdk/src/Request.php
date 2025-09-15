@@ -49,7 +49,10 @@ class Request
         }
 
         if (count($headers) > 0) {
-            curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
+            curl_setopt($ch, CURLOPT_HTTPHEADER, array(
+                'Content-Type: application/json',
+                $headers[0]
+            ));
         }
 
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
