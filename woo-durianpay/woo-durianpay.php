@@ -699,19 +699,21 @@ function woocommerce_durianpay_init()
                 $durianpayOrder = $api->order->create($data)->toArray();
             }
             catch (Exception $e)
-            {
+            {               
                 return $e;
             }
 
-            $durianpayOrderId = $durianpayOrder['data']['id'];
-
-            $woocommerce->session->set($sessionKey, $durianpayOrderId);
-
-            //update it in order comments
+            $err = $durianpayOrder['error'] ?? null;
             $order = new WC_Order($orderId);
+            if ($err != null) {
+                $order->add_order_note("Error create order durianpay: $err");
+                return null;
+            }
 
+            $durianpayOrderId = $durianpayOrder['data']['id'];
+            $woocommerce->session->set($sessionKey, $durianpayOrderId);                
             $order->add_order_note("Durianpay OrderId: $durianpayOrderId");
-
+            
             return $durianpayOrderId;
         }
 
