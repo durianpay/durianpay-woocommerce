@@ -704,9 +704,10 @@ function woocommerce_durianpay_init()
             }
 
             $err = $durianpayOrder['error'] ?? null;
+            $requestID = $durianpayOrder['request_id'] ?? null;
             $order = new WC_Order($orderId);
-            if ($err != null) {
-                $order->add_order_note("Error create order durianpay: $err");
+            if ($err != null) {                
+                $order->add_order_note("Order failed to be created: $err ($requestID) - Please contact Durianpay's support team: ");
                 return null;
             }
 
