@@ -1160,12 +1160,13 @@ function durianpay_webhook_init()
 
 
 /**
- * Lowest PHP release per branch that fixes CVE-2026-12184 and CVE-2026-14355.
+ * Lowest PHP release per branch that fixes CVE-2026-109618 and CVE-2026-109619 (PHP2Shell).
+ * These releases also contain the earlier fixes for CVE-2026-12184 and CVE-2026-14355.
  * Branches below 8.2 get no fix upstream.
  */
 function durianpay_php_patched_minimums()
 {
-    return array('8.2' => '8.2.32', '8.3' => '8.3.32', '8.4' => '8.4.23', '8.5' => '8.5.8');
+    return array('8.2' => '8.2.35', '8.3' => '8.3.36', '8.4' => '8.4.27', '8.5' => '8.5.12');
 }
 
 function durianpay_php_patch_notice()
@@ -1189,11 +1190,11 @@ function durianpay_php_patch_notice()
         return;
     }
 
-    $target = $minimums[$branch] ?? 'a supported branch (8.2.32+, 8.3.32+, 8.4.23+ or 8.5.8+)';
+    $target = $minimums[$branch] ?? 'a supported branch (8.2.35+, 8.3.36+, 8.4.27+ or 8.5.12+)';
 
     echo '<div class="notice notice-warning"><p>'
         . esc_html(sprintf(
-            'Durianpay: PHP %s is affected by CVE-2026-12184 / CVE-2026-14355. Please upgrade to %s or newer. If your host backports security fixes, you can ignore this notice.',
+            'Durianpay: PHP %s is affected by CVE-2026-109618 / CVE-2026-109619 (PHP2Shell). Please upgrade to %s or newer. If your host backports security fixes, you can ignore this notice.',
             PHP_VERSION,
             $target
         ))
