@@ -5,6 +5,7 @@
  * Description: Durianpay Payment Gateway Integration for WooCommerce
  * Version: 2.0.0
  * Stable tag: 2.0.0
+ * Requires PHP: 8.0
  * Author: Team Durianpay
  * WC tested up to: 9.1.2
  * Author URI: https://durianpay.id
