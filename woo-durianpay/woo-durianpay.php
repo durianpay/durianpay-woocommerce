@@ -27,6 +27,7 @@ use Durianpay\Api\Errors;
 use Automattic\WooCommerce\Blocks\Payments\PaymentMethodRegistry;
 
 add_action('plugins_loaded', 'woocommerce_durianpay_init', 0);
+add_action('admin_notices', 'durianpay_php_patch_notice');
 add_action('admin_post_nopriv_dp_wc_webhook', 'durianpay_webhook_init', 10);
 add_action('before_woocommerce_init', function() {
 	if (class_exists( \Automattic\WooCommerce\Utilities\FeaturesUtil::class))
@@ -1155,4 +1156,46 @@ function durianpay_webhook_init()
     $dpWebhook = new DP_Webhook();
 
     $dpWebhook->process();
+}
+
+
+/**
+ * Lowest PHP release per branch that fixes CVE-2026-12184 and CVE-2026-14355.
+ * Branches below 8.2 get no fix upstream.
+ */
+function durianpay_php_patched_minimums()
+{
+    return array('8.2' => '8.2.32', '8.3' => '8.3.32', '8.4' => '8.4.23', '8.5' => '8.5.8');
+}
+
+function durianpay_php_patch_notice()
+{
+    if (!current_user_can('manage_options'))
+    {
+        return;
+    }
+
+    $branch = PHP_MAJOR_VERSION . '.' . PHP_MINOR_VERSION;
+    $minimums = durianpay_php_patched_minimums();
+
+    // Branches newer than the ones we know are assumed patched
+    if (version_compare($branch, '8.5', '>'))
+    {
+        return;
+    }
+
+    if (isset($minimums[$branch]) and version_compare(PHP_VERSION, $minimums[$branch], '>='))
+    {
+        return;
+    }
+
+    $target = $minimums[$branch] ?? 'a supported branch (8.2.32+, 8.3.32+, 8.4.23+ or 8.5.8+)';
+
+    echo '<div class="notice notice-warning"><p>'
+        . esc_html(sprintf(
+            'Durianpay: PHP %s is affected by CVE-2026-12184 / CVE-2026-14355. Please upgrade to %s or newer. If your host backports security fixes, you can ignore this notice.',
+            PHP_VERSION,
+            $target
+        ))
+        . '</p></div>';
 }

@@ -46,7 +46,7 @@ Durianpay WooCommerce Plugin enables seamless integration of Durianpay as a paym
 
 - WordPress 5.6 or higher.
 - WooCommerce 4.0 or higher.
-- PHP 8.0 or higher.
+- PHP 8.0 or higher. To be safe from CVE-2026-12184 and CVE-2026-14355 use at least 8.2.32, 8.3.32, 8.4.23 or 8.5.8 (the plugin shows an admin notice otherwise).
 
 ---
 
